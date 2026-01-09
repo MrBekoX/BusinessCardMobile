@@ -1,7 +1,7 @@
 /**
  * Paylaşım işlemlerini yöneten servis.
  */
-import { Share } from 'react-native';
+import Share from 'react-native-share';
 import { generateVCard } from './qrService';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/errorMessages';
 
@@ -29,14 +29,9 @@ export const shareCard = async (cardData, method = 'default') => {
     }
 
     const result = await Share.open(shareOptions);
-    
-    if (result.action === Share.sharedAction) {
-      console.log('Card shared successfully');
-      return { success: true, message: SUCCESS_MESSAGES.CARD_SHARED };
-    } else if (result.action === Share.dismissedAction) {
-      console.log('Share dismissed');
-      return { success: false, error: 'User dismissed share dialog' };
-    }
+
+    console.log('Card shared successfully');
+    return { success: true, message: SUCCESS_MESSAGES.CARD_SHARED };
   } catch (error) {
     console.error('Share error:', error);
     if (error.message !== 'User did not share') {
@@ -284,7 +279,7 @@ export const saveShareHistory = async (shareData) => {
  * @returns {string} Benzersiz ID.
  */
 const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
 export default {

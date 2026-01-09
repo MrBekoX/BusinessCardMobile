@@ -8,13 +8,11 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ViewStyle,
   Image,
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
-import { formatPhone, truncateText } from '../../utils/formatters';
-import { getInitials, generateRandomColor } from '../../utils/formatters';
+import { formatPhone, truncateText, getInitials, generateRandomColor } from '../../utils/formatters';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Card = ({

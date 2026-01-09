@@ -9,8 +9,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { COLORS, TOUCHABLE_SIZE, TYPOGRAPHY, BORDER_RADIUS } from '../../constants/theme';

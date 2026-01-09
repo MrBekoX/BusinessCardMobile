@@ -15,8 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../constants/theme';
-import { formatPhone, formatName } from '../../utils/formatters';
-import { getInitials, generateRandomColor } from '../../utils/formatters';
+import { formatPhone, formatName, getInitials, generateRandomColor } from '../../utils/formatters';
 
 // Components
 import MemoizedButton from '../../components/common/MemoizedButton';

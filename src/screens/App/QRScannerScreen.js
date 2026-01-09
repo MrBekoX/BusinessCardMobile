@@ -2,7 +2,7 @@
  * QR Scanner Screen.
  * QR kod tarama ekranı.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants/theme';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 // Components
 import MemoizedButton from '../../components/common/MemoizedButton';
@@ -26,16 +26,9 @@ const QRScannerScreen = ({ navigation }) => {
   const theme = useTheme();
   const colors = theme.colors;
 
-  const [hasPermission, setHasPermission] = useState(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
 
   const handleBarCodeScanned = ({ type, data }) => {
     if (scanned) return;
@@ -78,7 +71,7 @@ const QRScannerScreen = ({ navigation }) => {
     Alert.alert('Galeri', 'Galeriden QR kod seçme özelliği yakında eklenecek');
   };
 
-  if (hasPermission === null) {
+  if (!permission) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.permissionContainer}>
@@ -90,7 +83,7 @@ const QRScannerScreen = ({ navigation }) => {
     );
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.permissionContainer}>
@@ -103,7 +96,7 @@ const QRScannerScreen = ({ navigation }) => {
           </Text>
           <MemoizedButton
             title="İzin Ver"
-            onPress={() => Camera.requestCameraPermissionsAsync()}
+            onPress={requestPermission}
             style={styles.permissionButton}
           />
         </View>
@@ -137,12 +130,12 @@ const QRScannerScreen = ({ navigation }) => {
       {/* Camera View */}
       <View style={styles.cameraContainer}>
         {isScanning && (
-          <Camera
+          <CameraView
             style={StyleSheet.absoluteFillObject}
-            type={Camera.Constants.Type.back}
-            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-            barCodeScannerSettings={{
-              barCodeTypes: [Camera.Constants.BarCodeType.qr],
+            facing="back"
+            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ['qr'],
             }}
           />
         )}

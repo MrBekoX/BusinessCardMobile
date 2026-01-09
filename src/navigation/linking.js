@@ -2,7 +2,7 @@
  * Deep Linking Configuration.
  * Uygulama içi ve harici bağlantıları yönetir.
  */
-
+import { Linking } from 'react-native';
 import Settings from '../config/settings';
 
 const linking = {

@@ -1,203 +1,182 @@
-# CardVault - Dijital Kartvizit Yönetim Uygulaması
+# CardVault
 
-## 📱 Proje Özeti
+Dijital kartvizit yönetim uygulaması. React Native ve Supabase ile geliştirilmiş cross-platform mobil uygulama.
 
-CardVault, React Native ve Supabase kullanılarak geliştirilmiş, kullanıcıların dijital kartvizitlerini oluşturup yönetebileceği kurumsal düzeyde bir mobil uygulamadır.
+## Özellikler
 
-## ✨ Özellikler
+- **Kartvizit Yönetimi**: Oluşturma, düzenleme, silme, arama ve favorilere ekleme
+- **QR Kod**: QR kod oluşturma ve kamera ile tarama
+- **Koleksiyonlar**: Kartvizitleri kategorilere ayırma
+- **Paylaşım**: vCard formatında dışa aktarma, sosyal medya paylaşımı
+- **Offline Destek**: Çevrimdışı çalışma ve senkronizasyon kuyruğu
+- **Tema**: Light/Dark mod ve sistem teması desteği
+- **Güvenlik**: Input validasyonu, Row Level Security (RLS)
 
-### 🔐 Kimlik Doğrulama
-- E-posta ve şifre ile giriş
-- Yeni kullanıcı kaydı
-- Şifre sıfırlama
-- Güvenli oturum yönetimi
+## Teknolojiler
 
-### 💳 Kartvizit Yönetimi
-- Yeni kartvizit oluşturma
-- Kartvizit düzenleme ve silme
-- QR kod tarama ve oluşturma
-- vCard formatında dışa aktarma
+| Kategori | Teknoloji |
+|----------|-----------|
+| Framework | React Native 0.81.5, Expo 54 |
+| Backend | Supabase (PostgreSQL) |
+| Navigation | React Navigation 6.x |
+| State | React Context API |
+| UI | React Native Vector Icons, Linear Gradient |
+| QR | react-native-qrcode-svg, expo-camera |
+| Storage | AsyncStorage, Expo Secure Store |
+| Testing | Jest, ESLint, Prettier |
 
-### 📁 Koleksiyonlar
-- Kartvizitleri kategorilere ayırma
-- Özel koleksiyonlar oluşturma
-- Koleksiyon bazında filtreleme
+## Gereksinimler
 
-### 🎨 Tema Sistemi
-- Light/Dark mod desteği
-- Sistem teması otomatik algılama
-- Tema değiştirme özelliği
-
-### 📱 Modern UI/UX
-- Material Design prensipleri
-- Responsive tasarım
-- Smooth animasyonlar
-- Erişilebilirlik desteği
-
-### 🔒 Güvenlik
-- Input validasyonu
-- XSS koruması
-- Güvenli veri saklama
-- Row Level Security (RLS)
-
-### 📶 Offline Destek
-- Cache yönetimi
-- Offline işlem kuyruğu
-- Ağ bağlantısı koptuğunda veri senkronizasyonu
-
-## 🛠️ Teknoloji Stack
-
-### Frontend
-- **React Native** - Cross-platform mobil uygulama geliştirme
-- **Expo** - React Native geliştirme platformu
-- **React Navigation** - Navigasyon yönetimi
-- **React Context API** - State yönetimi
-
-### Backend
-- **Supabase** - Backend-as-a-Service
-- **PostgreSQL** - Veritabanı
-- **Row Level Security** - Veri güvenliği
-
-### Araçlar ve Kütüphaneler
-- **TypeScript** - Tip güvenliği
-- **ESLint** - Kod kalitesi
-- **Prettier** - Kod formatlama
-- **React Native Vector Icons** - İkon kütüphanesi
-
-## 📋 Kurulum
-
-### Gereksinimler
-- Node.js (v14 veya üzeri)
-- npm veya yarn
+- Node.js >= 18.0.0
+- npm >= 9.0.0
 - Expo CLI
-- Git
+- iOS Simulator / Android Emulator veya fiziksel cihaz
 
-### Adım Adım Kurulum
+## Kurulum
 
-1. **Projeyi klonlayın**
+1. **Repoyu klonlayın**
+
 ```bash
-git clone https://github.com/yourusername/cardvault.git
+git clone https://github.com/kullaniciadi/cardvault.git
 cd cardvault
 ```
 
 2. **Bağımlılıkları yükleyin**
+
 ```bash
 npm install
-# veya
-yarn install
 ```
 
-3. **Çevre değişkenlerini ayarlayın**
+3. **Ortam değişkenlerini ayarlayın**
+
 ```bash
 cp .env.example .env
 ```
 
 `.env` dosyasını düzenleyin:
+
 ```env
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+APP_ENV=development
+APP_VERSION=1.0.0
+DEEP_LINK_SCHEME=cardvault
+DEEP_LINK_PREFIX=cardvault://
 ```
+
+Supabase key'lerinizi [Supabase Dashboard](https://supabase.com/dashboard) > Project Settings > API bölümünden alabilirsiniz.
 
 4. **Uygulamayı başlatın**
+
 ```bash
 npm start
-# veya
-expo start
 ```
 
+Platform seçenekleri:
 
-## 🚀 Kullanım
-
-### Giriş Yapma
-1. Uygulamayı açın
-2. Kayıtlı bir kullanıcıysanız e-posta ve şifrenizle giriş yapın
-3. Yeni kullanıcıysanız "Hesap Oluştur" butonuna tıklayın
-
-### Kartvizit Oluşturma
-1. Ana ekranda "+" butonuna tıklayın
-2. Gerekli bilgileri doldurun
-3. "Kartvizit Oluştur" butonuna tıklayın
-
-### QR Kod Tarama
-1. Alt navigasyonda QR ikonuna tıklayın
-2. Kamerayı QR koduna tutun
-3. Otomatik olarak taranacaktır
-
-### Koleksiyon Yönetimi
-1. "Koleksiyonlar" sekmesine gidin
-2. Yeni koleksiyon oluşturun
-3. Kartvizitleri koleksiyonlara ekleyin
-
-## 🔒 Güvenlik
-
-### Uygulanan Güvenlik Önlemleri
-- **Input Validasyonu**: Tüm kullanıcı girdileri doğrulanır
-- **XSS Koruması**: HTML injection'lara karşı koruma
-- **SQL Injection**: Supabase RLS ile koruma
-- **Veri Şifreleme**: Hassas veriler şifrelenmiş olarak saklanır
-- **Oturum Yönetimi**: Güvenli token tabanlı oturumlar
-
-### Güvenlik Kuralları
-- Hiçbir zaman kullanıcı girdilerini doğrudan HTML'de kullanmayın
-- Tüm API çağrılarını try-catch blokları içine alın
-- Supabase'de RLS politikalarını aktif kullanın
-- Hassas verileri asla client-side saklamayın
-
-## 🧪 Test
-
-### Unit Testler
 ```bash
-npm test
-# veya
-yarn test
+npm run android    # Android
+npm run ios        # iOS
+npm run web        # Web
 ```
 
-### Linting
-```bash
-npm run lint
-# veya
-yarn lint
+## Proje Yapısı
+
+```
+src/
+├── components/          # Yeniden kullanılabilir bileşenler
+│   └── common/
+│       ├── Card.js
+│       ├── CustomInput.js
+│       └── MemoizedButton.js
+├── config/              # Yapılandırma dosyaları
+│   ├── settings.js
+│   └── errorMessages.js
+├── constants/           # Sabitler
+│   └── theme.js
+├── context/             # React Context providers
+│   ├── AuthContext.js
+│   └── ThemeContext.js
+├── lib/                 # Kütüphane entegrasyonları
+│   ├── supabaseClient.js
+│   └── databaseSetup.js
+├── navigation/          # Navigasyon yapılandırması
+│   ├── AppNavigator.js
+│   ├── AuthNavigator.js
+│   └── linking.js
+├── screens/             # Ekranlar
+│   ├── App/
+│   │   ├── HomeScreen.js
+│   │   ├── CardListScreen.js
+│   │   ├── CardCreateScreen.js
+│   │   ├── CardDetailScreen.js
+│   │   ├── QRScannerScreen.js
+│   │   ├── CollectionsScreen.js
+│   │   └── SettingsScreen.js
+│   └── Auth/
+│       ├── LoginScreen.js
+│       ├── RegisterScreen.js
+│       └── ResetPasswordScreen.js
+├── services/            # İş mantığı servisleri
+│   ├── cardService.js
+│   ├── collectionService.js
+│   ├── profileService.js
+│   ├── qrService.js
+│   ├── shareService.js
+│   └── offlineService.js
+└── utils/               # Yardımcı fonksiyonlar
+    ├── formatters.js
+    └── validators.js
 ```
 
-### Kod Formatlama
-```bash
-npm run lint:fix
-# veya
-yarn lint:fix
-```
+## Komutlar
 
-## 📱 Platform Desteği
+| Komut | Açıklama |
+|-------|----------|
+| `npm start` | Expo development server başlatır |
+| `npm run android` | Android'de çalıştırır |
+| `npm run ios` | iOS'te çalıştırır |
+| `npm run web` | Web'de çalıştırır |
+| `npm test` | Jest testlerini çalıştırır |
+| `npm run lint` | ESLint ile kod kontrolü |
+| `npm run lint:fix` | ESLint hatalarını otomatik düzeltir |
 
-- **iOS**: iOS 11 ve üzeri
-- **Android**: Android 5.0 (API 21) ve üzeri
-- **Web**: Modern web tarayıcıları
+## Veritabanı
 
-## 🎯 Gelecek Özellikler
+Supabase'de aşağıdaki tablolar kullanılmaktadır:
 
-- [ ] Gerçek zamanlı bildirimler
-- [ ] Yapay zeka destekli kartvizit analizi
-- [ ] Bulut senkronizasyonu
-- [ ] Takım çalışması özellikleri
-- [ ] Gelişmiş arama ve filtreleme
-- [ ] Entegrasyonlar (CRM, e-posta servisleri)
+- `profiles` - Kullanıcı profilleri
+- `cards` - Kartvizitler
+- `collections` - Koleksiyonlar
+- `card_collections` - Kartvizit-koleksiyon ilişkisi
 
-## 🤝 Katkıda Bulunma
+Migration dosyaları `supabase/migrations/` klasöründe bulunmaktadır.
+
+## Ortam Değişkenleri
+
+| Değişken | Açıklama | Zorunlu |
+|----------|----------|---------|
+| `SUPABASE_URL` | Supabase proje URL'i | Evet |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key | Evet |
+| `APP_ENV` | Ortam (development/production) | Hayır |
+| `APP_VERSION` | Uygulama versiyonu | Hayır |
+| `DEEP_LINK_SCHEME` | Deep link şeması | Hayır |
+| `DEEP_LINK_PREFIX` | Deep link prefix'i | Hayır |
+
+## Platform Desteği
+
+- iOS 13.0+
+- Android API 21+ (Android 5.0)
+- Web (modern tarayıcılar)
+
+## Katkıda Bulunma
 
 1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'e push yapın (`git push origin feature/AmazingFeature`)
-5. Pull Request oluşturun
+2. Feature branch oluşturun (`git checkout -b feature/yeni-ozellik`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Yeni özellik eklendi'`)
+4. Branch'e push yapın (`git push origin feature/yeni-ozellik`)
+5. Pull Request açın
 
-## 📄 Lisans
+## Lisans
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
-
-## 👥 Takım
-
-- **Frontend Developer** - [İsminiz]
-- **UI/UX Designer** - [İsminiz]
-- **Backend Developer** - [İsminiz]
-
-
-**CardVault** © 2024 - Dijital kartvizit yönetiminin geleceği.
+MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.

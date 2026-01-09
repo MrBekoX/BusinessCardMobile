@@ -3,14 +3,12 @@
  * React.memo ile sarılmış, performans için optimize edilmiş buton.
  */
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
   View,
   ActivityIndicator,
-  ViewStyle,
-  TextStyle
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { COLORS, TOUCHABLE_SIZE, TYPOGRAPHY } from '../../constants/theme';
