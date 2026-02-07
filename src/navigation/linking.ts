@@ -1,0 +1,165 @@
+/**
+ * Deep Linking Configuration.
+ * Uygulama içi ve harici bağlantıları yönetir.
+ */
+import { Linking } from 'react-native';
+import { LinkingOptions, PathConfigMap } from '@react-navigation/native';
+import Settings from '@config/settings';
+import { RootStackParamList } from '@/types/navigation';
+
+// ==================== TYPES ====================
+
+interface ParsedDeepLink {
+  route: string;
+  params?: Record<string, unknown>;
+}
+
+interface DeepLinkConfig {
+  screens: PathConfigMap<RootStackParamList>;
+}
+
+interface NavigationLike {
+  navigate: (route: string, params?: Record<string, unknown>) => void;
+}
+
+// ==================== LINKING CONFIG ====================
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: Settings.deepLinking.prefixes,
+  
+  config: {
+    screens: {
+      // Auth Navigator
+      Auth: {
+        screens: {
+          Login: 'auth/login',
+          Register: 'auth/register',
+          ResetPassword: 'auth/reset-password',
+        },
+      },
+      
+      // App Navigator
+      App: {
+        screens: {
+          MainTabs: {
+            screens: {
+              Home: 'home',
+              Cards: 'cards',
+              QRScanner: 'qr-scanner',
+              Collections: 'collections',
+              Settings: 'settings',
+            },
+          },
+          CardCreate: 'card/create',
+          CardDetail: {
+            path: 'card/:cardId',
+            parse: {
+              cardId: (cardId: string): string => `${cardId}`,
+            },
+          },
+        },
+      },
+    },
+  } as DeepLinkConfig,
+  
+  // Custom getInitialURL implementation
+  async getInitialURL(): Promise<string | null> {
+    // Check if app was opened from a deep link
+    const url = await Linking.getInitialURL();
+    
+    if (url != null) {
+      return url;
+    }
+    
+    // Check if there is a deep link from Firebase Dynamic Links
+    // This would be implemented if using Firebase
+    
+    return null;
+  },
+  
+  // Custom subscribe implementation
+  subscribe(listener: (url: string) => void): () => void {
+    const onReceiveURL = ({ url }: { url: string }): void => listener(url);
+    
+    // Listen to incoming links from deep linking
+    const subscription = Linking.addEventListener('url', onReceiveURL);
+    
+    // Listen to Firebase Dynamic Links (if implemented)
+    
+    return (): void => {
+      // Clean up the event listeners
+      subscription?.remove();
+    };
+  },
+};
+
+// ==================== UTILITY FUNCTIONS ====================
+
+export const deepLinkUtils = {
+  /**
+   * Generate deep link for a card
+   */
+  generateCardLink: (cardId: string): string => {
+    return `${Settings.deepLinking.scheme}://card/${cardId}`;
+  },
+  
+  /**
+   * Generate deep link for sharing
+   */
+  generateShareLink: (cardId: string): string => {
+    return `https://cardvault.app/card/${cardId}`;
+  },
+  
+  /**
+   * Parse deep link to extract route information
+   */
+  parseDeepLink: (url: string): ParsedDeepLink | null => {
+    if (!url) return null;
+    
+    try {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname;
+      
+      // Parse card route
+      if (path.startsWith('/card/')) {
+        const cardId = path.split('/')[2];
+        return {
+          route: 'CardDetail',
+          params: { cardId },
+        };
+      }
+      
+      // Parse auth routes
+      if (path.startsWith('/auth/')) {
+        const authRoute = path.split('/')[2];
+        const routeMap: Record<string, string> = {
+          'login': 'Login',
+          'register': 'Register',
+          'reset-password': 'ResetPassword',
+        };
+        
+        return {
+          route: routeMap[authRoute] || 'Login',
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Parse deep link error:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Handle incoming deep link
+   */
+  handleDeepLink: (url: string, navigation: NavigationLike): void => {
+    const parsed = deepLinkUtils.parseDeepLink(url);
+    
+    if (parsed && parsed.route) {
+      navigation.navigate(parsed.route, parsed.params);
+    }
+  },
+};
+
+export default linking;

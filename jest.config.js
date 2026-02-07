@@ -3,8 +3,8 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: [
-    '**/__tests__/**/*.js',
-    '**/?(*.)+(spec|test).js'
+    '**/__tests__/**/*.{js,ts,tsx}',
+    '**/?(*.)+(spec|test).{js,ts,tsx}'
   ],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
@@ -13,24 +13,33 @@ module.exports = {
     'node_modules/(?!(jest-)?react-native|react-clone-referenced-element|@react-native-community|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|@sentry/.*)',
   ],
   moduleFileExtensions: [
-    'js',
-    'jsx',
     'ts',
     'tsx',
+    'js',
+    'jsx',
     'json',
     'node'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@env$': '<rootDir>/src/config/env.js',
+    '^@components/(.*)$': '<rootDir>/src/components/$1',
+    '^@screens/(.*)$': '<rootDir>/src/screens/$1',
+    '^@services/(.*)$': '<rootDir>/src/services/$1',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^@types/(.*)$': '<rootDir>/src/types/$1',
+    '^@context/(.*)$': '<rootDir>/src/context/$1',
+    '^@config/(.*)$': '<rootDir>/src/config/$1',
+    '^@navigation/(.*)$': '<rootDir>/src/navigation/$1',
+    '^@env$': '<rootDir>/src/__tests__/__mocks__/env.js',
   },
   setupFilesAfterEnv: [
     '<rootDir>/src/__tests__/setup.js',
   ],
   collectCoverageFrom: [
-    'src/**/*.{js,jsx}',
-    '!src/**/*.test.{js,jsx}',
-    '!src/**/*.spec.{js,jsx}',
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.test.{js,jsx,ts,tsx}',
+    '!src/**/*.spec.{js,jsx,ts,tsx}',
     '!src/__tests__/**',
     '!src/**/*.d.ts',
   ],
