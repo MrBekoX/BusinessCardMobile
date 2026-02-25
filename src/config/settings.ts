@@ -3,6 +3,9 @@
  * Tüm ortam değişkenleri ve sabit ayarlar buradan okunur.
  */
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('Settings');
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -147,7 +150,7 @@ const Settings: SettingsConfig = {
 
 // Ayarların geçerliliğini kontrol et
 if (!Settings.supabase.url || !Settings.supabase.anonKey) {
-  console.warn('Supabase URL ve Anon Key .env dosyasında tanımlanmalıdır.');
+  logger.warn('Supabase URL and Anon Key must be defined in .env file');
 }
 
 export default Settings;

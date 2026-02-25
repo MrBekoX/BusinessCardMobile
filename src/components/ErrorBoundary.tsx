@@ -11,6 +11,9 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '@constants/theme';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('ErrorBoundary');
 
 // ==================== TYPES ====================
 
@@ -49,7 +52,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.props.onError?.(error, errorInfo);
     
     // Log error for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logger.error('ErrorBoundary caught an error', { error, errorInfo });
   }
 
   handleRetry = (): void => {

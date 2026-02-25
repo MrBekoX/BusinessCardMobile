@@ -5,6 +5,9 @@ import Share from 'react-native-share';
 import { generateVCard } from './qrService';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@config/errorMessages';
 import { Card, ServiceResponse } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('ShareService');
 
 // ==================== TYPES ====================
 
@@ -97,10 +100,10 @@ export const shareCard = async (
 
     await Share.open(shareOptions as Parameters<typeof Share.open>[0]);
 
-    console.log('Card shared successfully');
+    logger.info('Card shared successfully');
     return { success: true, message: SUCCESS_MESSAGES.CARD_SHARED };
   } catch (error) {
-    console.error('Share error:', error);
+    logger.error('Share error', error);
     if ((error as Error).message !== 'User did not share') {
       return { success: false, error: ERROR_MESSAGES.SHARE_FAILED };
     }
@@ -138,7 +141,7 @@ export const shareToPlatform = async (
       platform,
     };
   } catch (error) {
-    console.error(`Share to ${platform} error:`, error);
+    logger.error(`Share to ${platform} error`, error);
     return {
       success: false,
       error: ERROR_MESSAGES.SHARE_FAILED,
@@ -158,10 +161,10 @@ export const exportVCard = async (cardData: Card): Promise<string> => {
     const filename = `${(cardData.company_name || 'card').replace(/\s/g, '_')}.vcf`;
     
     // React Native FS ile dosya yazma işlemi burada yapılacak
-    console.log('vCard exported:', filename, 'data length:', vCardData.length);
+    logger.info('vCard exported', { filename, dataLength: vCardData.length });
     return filename;
   } catch (error) {
-    console.error('vCard export error:', error);
+    logger.error('vCard export error', error);
     throw new Error(ERROR_MESSAGES.VCARD_GENERATION_FAILED);
   }
 };
@@ -172,10 +175,10 @@ export const exportVCard = async (cardData: Card): Promise<string> => {
 export const exportToPDF = async (cardData: Card): Promise<string> => {
   try {
     // PDF oluşturma işlemi placeholder
-    console.log('PDF export simulation completed');
+    logger.info('PDF export simulation completed');
     return `${(cardData.company_name || 'card').replace(/\s/g, '_')}.pdf`;
   } catch (error) {
-    console.error('PDF export error:', error);
+    logger.error('PDF export error', error);
     throw new Error('PDF oluşturulamadı');
   }
 };
@@ -186,10 +189,10 @@ export const exportToPDF = async (cardData: Card): Promise<string> => {
 export const exportToImage = async (cardData: Card): Promise<string> => {
   try {
     // ViewShot kullanarak ekran görüntüsü alma placeholder
-    console.log('Image export simulation completed');
+    logger.info('Image export simulation completed');
     return `${(cardData.company_name || 'card').replace(/\s/g, '_')}.png`;
   } catch (error) {
-    console.error('Image export error:', error);
+    logger.error('Image export error', error);
     throw new Error('Resim oluşturulamadı');
   }
 };
@@ -219,7 +222,7 @@ export const shareMultipleCards = async (cardsData: Card[]): Promise<ShareResult
       count: cardsData.length,
     };
   } catch (error) {
-    console.error('Multiple cards share error:', error);
+    logger.error('Multiple cards share error', error);
     return {
       success: false,
       error: ERROR_MESSAGES.SHARE_FAILED,
@@ -244,7 +247,7 @@ export const getShareStats = async (): Promise<ShareStats> => {
       lastShareDate: null,
     };
   } catch (error) {
-    console.error('Get share stats error:', error);
+    logger.error('Get share stats error', error);
     return {
       totalShares: 0,
       vcardShares: 0,
@@ -268,9 +271,9 @@ export const saveShareHistory = async (shareData: Omit<ShareHistoryItem, 'id' | 
     };
     
     // Local storage'a kaydet
-    console.log('Share history saved:', historyItem);
+    logger.info('Share history saved', { historyItem });
   } catch (error) {
-    console.error('Save share history error:', error);
+    logger.error('Save share history error', error);
   }
 };
 

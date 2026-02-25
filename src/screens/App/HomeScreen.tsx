@@ -25,7 +25,7 @@ import { Card as CardType } from '@/types';
 
 // Components
 import Card from '@components/common/Card';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 

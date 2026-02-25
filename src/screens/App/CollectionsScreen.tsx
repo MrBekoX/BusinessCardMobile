@@ -22,10 +22,13 @@ import { useAuth } from '@context/AuthContext';
 import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { AppStackParamList, AppTabParamList } from '@/types/navigation';
 import { Collection } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('CollectionsScreen');
 
 // Components
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // Services
 import { getCollections, deleteCollection } from '@services/collectionService';
@@ -65,7 +68,7 @@ const CollectionsScreen: React.FC<CollectionsScreenProps> = ({ navigation: _navi
         Alert.alert('Hata', result.error || 'Koleksiyonlar yüklenemedi');
       }
     } catch (error) {
-      console.error('Load collections error:', error);
+      logger.error('Load collections error', error);
       Alert.alert('Hata', 'Koleksiyonlar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);

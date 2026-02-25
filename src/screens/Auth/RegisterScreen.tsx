@@ -21,11 +21,14 @@ import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { isValidEmail, isValidPassword, isValidPhone } from '@utils/validators';
 import { ERROR_MESSAGES } from '@config/errorMessages';
 import { AuthStackParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('RegisterScreen');
 
 // Components
 import CustomInput from '@components/common/CustomInput';
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 
@@ -185,7 +188,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         Alert.alert('Kayıt Başarısız', result.error || ERROR_MESSAGES.UNEXPECTED_ERROR);
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error('Registration error', error);
       Alert.alert('Hata', ERROR_MESSAGES.UNEXPECTED_ERROR);
     }
   };

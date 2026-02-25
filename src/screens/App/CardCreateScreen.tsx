@@ -20,11 +20,14 @@ import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { validateCardData } from '@utils/validators';
 import { ERROR_MESSAGES } from '@config/errorMessages';
 import { AppStackParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('CardCreateScreen');
 
 // Components
 import CustomInput from '@components/common/CustomInput';
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // Services
 import { createCard } from '@services/cardService';
@@ -112,7 +115,7 @@ const CardCreateScreen: React.FC<CardCreateScreenProps> = ({ navigation }) => {
         Alert.alert('Hata', result.error || 'Kart oluşturulamadı');
       }
     } catch (error) {
-      console.error('Card creation error:', error);
+      logger.error('Card creation error', error);
       Alert.alert('Hata', ERROR_MESSAGES.CARD_CREATION_FAILED);
     } finally {
       setLoading(false);

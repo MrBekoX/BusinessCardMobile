@@ -6,6 +6,9 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useMe
 import { Appearance, ColorSchemeName } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '@constants/theme';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('ThemeContext');
 
 // ==================== TYPES ====================
 
@@ -93,7 +96,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         setIsSystemTheme(true);
       }
     } catch (error) {
-      console.error('Tema yüklenemedi:', error);
+      logger.error('Failed to load theme', error);
       // Hata durumunda sistem temasını kullan
       const systemTheme = Appearance.getColorScheme();
       setIsDark(systemTheme === 'dark');
@@ -105,7 +108,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     try {
       await AsyncStorage.setItem(THEME_KEY, mode);
     } catch (error) {
-      console.error('Tema kaydedilemedi:', error);
+      logger.error('Failed to save theme', error);
     }
   };
 

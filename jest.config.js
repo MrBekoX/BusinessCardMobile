@@ -10,7 +10,7 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jest-)?react-native|react-clone-referenced-element|@react-native-community|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|@sentry/.*)',
+    'node_modules/(?!(jest-)?react-native|@react-native/.*|react-clone-referenced-element|@react-native-community|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|@sentry/.*)',
   ],
   moduleFileExtensions: [
     'ts',
@@ -31,6 +31,7 @@ module.exports = {
     '^@context/(.*)$': '<rootDir>/src/context/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@navigation/(.*)$': '<rootDir>/src/navigation/$1',
+    '^react-native-vector-icons/(.*)$': '<rootDir>/src/__tests__/__mocks__/vectorIconMock.js',
     '^@env$': '<rootDir>/src/__tests__/__mocks__/env.js',
   },
   setupFilesAfterEnv: [

@@ -50,7 +50,8 @@ export class RateLimiter {
       return true;
     } catch (error) {
       logger.error('Rate limit check failed', error);
-      return true; // Hata durumunda izin ver
+      // Fail-secure: Hata durumunda izin verme (brute force koruması)
+      return false;
     }
   }
 
@@ -101,7 +102,8 @@ export class RateLimiter {
       return Math.max(0, maxAttempts - record.count);
     } catch (error) {
       logger.error('Failed to get remaining attempts', error);
-      return maxAttempts;
+      // Fail-secure: Hata durumunda 0 dön (kalan hak yok gibi davran)
+      return 0;
     }
   }
 
@@ -128,14 +130,41 @@ export class RateLimiter {
   }
 
   /**
-   * Tüm rate limit kayıtlarını temizle
+   * Sadece süresi geçmiş rate limit kayıtlarını temizle
+   * Güvenlik: Tüm kayıtları temizlemek rate limit bypass'a olanak sağlar
    */
   async clearAll(): Promise<void> {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const rateLimitKeys = allKeys.filter(k => k.startsWith(RATE_LIMIT_PREFIX));
-      await AsyncStorage.multiRemove(rateLimitKeys);
-      logger.info('All rate limit records cleared');
+      const now = Date.now();
+      const expiredKeys: string[] = [];
+
+      // Sadece 24 saatten eski kayıtları temizle
+      const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+      for (const key of allKeys) {
+        if (key.startsWith(RATE_LIMIT_PREFIX)) {
+          try {
+            const recordStr = await AsyncStorage.getItem(key);
+            if (recordStr) {
+              const record = JSON.parse(recordStr) as AttemptRecord;
+              const recordAge = now - record.firstAttempt;
+
+              if (recordAge > MAX_AGE_MS) {
+                expiredKeys.push(key);
+              }
+            }
+          } catch {
+            // Bozuk kayıtları da temizle
+            expiredKeys.push(key);
+          }
+        }
+      }
+
+      if (expiredKeys.length > 0) {
+        await AsyncStorage.multiRemove(expiredKeys);
+        logger.info(`${expiredKeys.length} expired rate limit records cleared`);
+      }
     } catch (error) {
       logger.error('Failed to clear rate limit records', error);
     }
@@ -144,11 +173,13 @@ export class RateLimiter {
   // ==================== PRIVATE METHODS ====================
 
   private async getRecord(key: string): Promise<AttemptRecord | null> {
+    const data = await AsyncStorage.getItem(`${RATE_LIMIT_PREFIX}${key}`);
+    if (!data) return null;
     try {
-      const data = await AsyncStorage.getItem(`${RATE_LIMIT_PREFIX}${key}`);
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
+      return JSON.parse(data) as AttemptRecord;
+    } catch (parseError) {
+      // Bozuk JSON parse hatası fırlat
+      throw new Error(`Invalid rate limit record format for ${key}`);
     }
   }
 

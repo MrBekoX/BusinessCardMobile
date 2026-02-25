@@ -22,12 +22,15 @@ import { useAuth } from '@context/AuthContext';
 import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { AppStackParamList, AppTabParamList } from '@/types/navigation';
 import { Card as CardType } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('CardListScreen');
 
 // Components
 import Card from '@components/common/Card';
 import MemoizedButton from '@components/common/MemoizedButton';
 import CustomInput from '@components/common/CustomInput';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // Services
 import { getCards, searchCards } from '@services/cardService';
@@ -70,7 +73,7 @@ const CardListScreen: React.FC<CardListScreenProps> = ({ navigation }) => {
         Alert.alert('Hata', result.error || 'Kartlar yüklenemedi');
       }
     } catch (error) {
-      console.error('Load cards error:', error);
+      logger.error('Load cards error', error);
       Alert.alert('Hata', 'Kartlar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
@@ -97,7 +100,7 @@ const CardListScreen: React.FC<CardListScreenProps> = ({ navigation }) => {
           setFilteredCards(result.data);
         }
       } catch (error) {
-        console.error('Search error:', error);
+        logger.error('Search error', error);
       }
     } else {
       setFilteredCards(cards);

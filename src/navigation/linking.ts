@@ -6,6 +6,9 @@ import { Linking } from 'react-native';
 import { LinkingOptions, PathConfigMap } from '@react-navigation/native';
 import Settings from '@config/settings';
 import { RootStackParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('Linking');
 
 // ==================== TYPES ====================
 
@@ -95,57 +98,108 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 // ==================== UTILITY FUNCTIONS ====================
 
+/**
+ * Validates UUID format
+ * Prevents path traversal and malformed UUID attacks
+ */
+const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
+/**
+ * Sanitizes input to prevent injection attacks
+ */
+const sanitizeInput = (input: string): string => {
+  // Remove any potentially dangerous characters
+  return input.replace(/[<>\"'%;()&+]/g, '');
+};
+
 export const deepLinkUtils = {
   /**
    * Generate deep link for a card
    */
   generateCardLink: (cardId: string): string => {
+    if (!isValidUUID(cardId)) {
+      logger.warn('Invalid cardId for link generation', { cardId });
+      return `${Settings.deepLinking.scheme}://home`;
+    }
     return `${Settings.deepLinking.scheme}://card/${cardId}`;
   },
-  
+
   /**
    * Generate deep link for sharing
    */
   generateShareLink: (cardId: string): string => {
+    if (!isValidUUID(cardId)) {
+      logger.warn('Invalid cardId for share link', { cardId });
+      return 'https://cardvault.app/home';
+    }
     return `https://cardvault.app/card/${cardId}`;
   },
-  
+
   /**
    * Parse deep link to extract route information
+   * Validates all input parameters to prevent injection attacks
    */
   parseDeepLink: (url: string): ParsedDeepLink | null => {
-    if (!url) return null;
-    
+    if (!url) {
+      logger.warn('Empty deep link URL');
+      return null;
+    }
+
     try {
       const urlObj = new URL(url);
       const path = urlObj.pathname;
-      
-      // Parse card route
+
+      // Parse card route with UUID validation
       if (path.startsWith('/card/')) {
-        const cardId = path.split('/')[2];
+        const segments = path.split('/');
+        const cardId = segments[2];
+
+        // Validate UUID format before using
+        if (!cardId || !isValidUUID(cardId)) {
+          logger.warn('Invalid cardId format in deep link', { cardId, path });
+          return null;
+        }
+
         return {
           route: 'CardDetail',
-          params: { cardId },
+          params: { cardId: sanitizeInput(cardId) },
         };
       }
-      
-      // Parse auth routes
+
+      // Parse auth routes - whitelist validation
       if (path.startsWith('/auth/')) {
-        const authRoute = path.split('/')[2];
+        const segments = path.split('/');
+        const authRoute = sanitizeInput(segments[2] || '');
+
+        // Whitelist of valid auth routes
         const routeMap: Record<string, string> = {
           'login': 'Login',
           'register': 'Register',
           'reset-password': 'ResetPassword',
         };
-        
+
+        const validRoute = routeMap[authRoute];
+        if (!validRoute) {
+          logger.warn('Unknown auth route in deep link', { authRoute, path });
+          // Default to login instead of returning null for better UX
+          return {
+            route: 'Login',
+          };
+        }
+
         return {
-          route: routeMap[authRoute] || 'Login',
+          route: validRoute,
         };
       }
-      
+
+      // Unknown route - log and return null
+      logger.warn('Unknown deep link path', { path });
       return null;
     } catch (error) {
-      console.error('Parse deep link error:', error);
+      logger.error('Parse deep link error', error);
       return null;
     }
   },

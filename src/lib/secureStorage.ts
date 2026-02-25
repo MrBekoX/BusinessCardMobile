@@ -64,7 +64,8 @@ export class SecureStorageService {
         for (let i = 0; i < chunkCount; i++) {
           await SecureStore.deleteItemAsync(`${SECURE_PREFIX}${key}_chunk_${i}`);
         }
-        await AsyncStorage.removeItem(`${SECURE_PREFIX}${key}_chunks`);
+        // Meta veriyi de SecureStore'dan sil
+        await SecureStore.deleteItemAsync(`${SECURE_PREFIX}${key}_meta`);
       }
 
       await SecureStore.deleteItemAsync(`${SECURE_PREFIX}${key}`);
@@ -81,14 +82,18 @@ export class SecureStorageService {
    */
   async clearAll(): Promise<boolean> {
     try {
-      // AsyncStorage'dan secure key'leri bul ve sil
+      // Hem eski (AsyncStorage) hem yeni (SecureStore) meta key'lerini temizle
       const allKeys = await AsyncStorage.getAllKeys();
-      const secureMetaKeys = allKeys.filter(k => k.startsWith(`${SECURE_PREFIX}`) && k.endsWith('_chunks'));
+      const oldMetaKeys = allKeys.filter(k => k.startsWith(`${SECURE_PREFIX}`) && k.endsWith('_chunks'));
 
-      for (const metaKey of secureMetaKeys) {
+      for (const metaKey of oldMetaKeys) {
         const baseKey = metaKey.replace(`${SECURE_PREFIX}`, '').replace('_chunks', '');
         await this.removeSecureItem(baseKey);
       }
+
+      // Not: SecureStore'daki _meta key'leri otomatik olarak removeSecureItem ile temizlenir
+      // Ekstra temizlik için SecureStore'daki tüm secure_ prefix'li key'leri de temizleyebiliriz
+      // Ancak bu tüm auth token'ları da siler, sadece logout sırasında çağrılmalı
 
       logger.info('All secure items cleared');
       return true;
@@ -112,8 +117,10 @@ export class SecureStorageService {
         await SecureStore.setItemAsync(`${SECURE_PREFIX}${key}_chunk_${i}`, chunks[i]);
       }
 
-      // Parça sayısını meta olarak kaydet
-      await AsyncStorage.setItem(`${SECURE_PREFIX}${key}_chunks`, chunks.length.toString());
+      // Parça sayısını meta olarak SecureStore'a base64 encoded şekilde kaydet
+      // Güvenlik: AsyncStorage'da chunk sayısını saklamak storage pattern'i ifşa eder
+      const metaValue = Buffer.from(chunks.length.toString()).toString('base64');
+      await SecureStore.setItemAsync(`${SECURE_PREFIX}${key}_meta`, metaValue);
 
       logger.debug(`Large secure item set: ${key} (${chunks.length} chunks)`);
       return true;
@@ -136,8 +143,29 @@ export class SecureStorageService {
 
   private async getChunkCount(key: string): Promise<number> {
     try {
-      const count = await AsyncStorage.getItem(`${SECURE_PREFIX}${key}_chunks`);
-      return count ? parseInt(count, 10) : 0;
+      // Önce SecureStore'dan metadata'yı oku (yeni yöntem)
+      const metaValue = await SecureStore.getItemAsync(`${SECURE_PREFIX}${key}_meta`);
+      if (metaValue) {
+        const count = parseInt(Buffer.from(metaValue, 'base64').toString(), 10);
+        return isNaN(count) ? 0 : count;
+      }
+
+      // Fallback: Eski yöntemle AsyncStorage'dan kontrol (backward compatibility)
+      // Sonraki sürümde kaldırılabilir
+      const oldMeta = await AsyncStorage.getItem(`${SECURE_PREFIX}${key}_chunks`);
+      if (oldMeta) {
+        const count = parseInt(oldMeta, 10);
+        if (!isNaN(count) && count > 0) {
+          // Eski metadayı SecureStore'a taşı
+          const newMetaValue = Buffer.from(count.toString()).toString('base64');
+          await SecureStore.setItemAsync(`${SECURE_PREFIX}${key}_meta`, newMetaValue);
+          await AsyncStorage.removeItem(`${SECURE_PREFIX}${key}_chunks`);
+          logger.debug(`Migrated chunk metadata for ${key} to SecureStore`);
+          return count;
+        }
+      }
+
+      return 0;
     } catch {
       return 0;
     }

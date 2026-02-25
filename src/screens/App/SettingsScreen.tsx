@@ -21,10 +21,13 @@ import { useAuth } from '@context/AuthContext';
 import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { formatName } from '@utils/formatters';
 import { AppStackParamList, AppTabParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('SettingsScreen');
 
 // Components
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 
@@ -66,7 +69,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation: _navigation
         onPress: async () => {
           const result = await signOut();
           if (result.success) {
-            console.log('Signed out successfully');
+            logger.info('Signed out successfully');
           }
         },
       },

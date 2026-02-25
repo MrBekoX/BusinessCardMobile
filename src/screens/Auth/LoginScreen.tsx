@@ -21,11 +21,14 @@ import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { isValidEmail } from '@utils/validators';
 import { ERROR_MESSAGES } from '@config/errorMessages';
 import { AuthStackParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('LoginScreen');
 
 // Components
 import CustomInput from '@components/common/CustomInput';
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 
@@ -106,12 +109,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       const result = await signIn(formData.email.trim(), formData.password);
       
       if (result.success) {
-        console.log('Login successful');
+        logger.info('Login successful');
       } else {
         Alert.alert('Giriş Başarısız', result.error || ERROR_MESSAGES.INVALID_CREDENTIALS);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error', error);
       Alert.alert('Hata', ERROR_MESSAGES.UNEXPECTED_ERROR);
     }
   };

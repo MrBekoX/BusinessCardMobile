@@ -213,6 +213,11 @@ CREATE POLICY "Users can insert collection_cards"
       WHERE collections.id = collection_cards.collection_id
       AND collections.user_id = auth.uid()
     )
+    AND EXISTS (
+      SELECT 1 FROM cards
+      WHERE cards.id = collection_cards.card_id
+      AND cards.user_id = auth.uid()
+    )
   );
 
 DROP POLICY IF EXISTS "Users can delete collection_cards" ON collection_cards;
@@ -252,10 +257,13 @@ CREATE TRIGGER on_auth_user_created
   EXECUTE FUNCTION public.handle_new_user();
 
 -- =====================================================
--- HELPER FUNCTIONS
+-- HELPER FUNCTIONS (SECURITY INVOKER - RLS Safe)
 -- =====================================================
 
-CREATE OR REPLACE FUNCTION get_collection_with_count(user_id_param UUID)
+-- Kullanıcının kendi koleksiyonlarını sayılarıyla birlikte getir
+-- NOT: SECURITY INVOKER ile RLS politikalarına tabi olur
+DROP FUNCTION IF EXISTS get_collection_with_count(UUID);
+CREATE OR REPLACE FUNCTION get_collection_with_count()
 RETURNS TABLE (
   id UUID,
   name VARCHAR,
@@ -279,22 +287,26 @@ BEGIN
     c.updated_at
   FROM collections c
   LEFT JOIN collection_cards cc ON c.id = cc.collection_id
-  WHERE c.user_id = user_id_param
+  WHERE c.user_id = auth.uid()  -- RLS ile uyumlu, client parametresi yok
   GROUP BY c.id
   ORDER BY c.created_at DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public;
 
-CREATE OR REPLACE FUNCTION search_cards(
-  user_id_param UUID,
-  search_query TEXT
-)
+-- RPC fonksiyonuna sadece authenticated kullanıcılar erişebilir
+GRANT EXECUTE ON FUNCTION get_collection_with_count() TO authenticated;
+REVOKE EXECUTE ON FUNCTION get_collection_with_count() FROM public;
+
+-- Kullanıcının kendi kartlarında arama yap (SECURITY INVOKER - RLS Safe)
+-- NOT: user_id_param kaldırıldı, auth.uid() kullanılıyor
+DROP FUNCTION IF EXISTS search_cards(UUID, TEXT);
+CREATE OR REPLACE FUNCTION search_cards(search_query TEXT)
 RETURNS SETOF cards AS $$
 BEGIN
   RETURN QUERY
   SELECT *
   FROM cards
-  WHERE user_id = user_id_param
+  WHERE user_id = auth.uid()  -- RLS ile uyumlu, client parametresi yok
   AND (
     company_name ILIKE '%' || search_query || '%' OR
     name ILIKE '%' || search_query || '%' OR
@@ -304,4 +316,8 @@ BEGIN
   )
   ORDER BY created_at DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public;
+
+-- RPC fonksiyonuna sadece authenticated kullanıcılar erişebilir
+GRANT EXECUTE ON FUNCTION search_cards(TEXT) TO authenticated;
+REVOKE EXECUTE ON FUNCTION search_cards(TEXT) FROM public;

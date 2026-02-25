@@ -4,6 +4,9 @@
  */
 import { supabase } from './supabaseClient';
 import { ServiceResponse } from '@/types';
+import { Logger } from './logger';
+
+const logger = new Logger('DatabaseSetup');
 
 // ==================== TYPES ====================
 
@@ -80,7 +83,7 @@ export const checkTablesExist = async (): Promise<boolean> => {
 
     // Eğer herhangi bir hata varsa (tablo yoksa), false döndür
     if (profilesError || cardsError || collectionsError || collectionCardsError) {
-      console.log('Tablolar henüz oluşturulmamış:', {
+      logger.debug('Tables not yet created', {
         profiles: !!profilesError,
         cards: !!cardsError,
         collections: !!collectionsError,
@@ -91,7 +94,7 @@ export const checkTablesExist = async (): Promise<boolean> => {
 
     return true;
   } catch (error) {
-    console.error('Tablo kontrolü hatası:', error);
+    logger.error('Table check error', error);
     return false;
   }
 };
@@ -104,7 +107,7 @@ export const checkTablesExist = async (): Promise<boolean> => {
  */
 export const seedTestData = async (userId: string): Promise<SeedResult> => {
   try {
-    console.log('Test verileri ekleniyor...');
+    logger.info('Adding test data...');
 
     // Önce mevcut test verilerini kontrol et
     const { data: existingCards } = await supabase
@@ -114,7 +117,7 @@ export const seedTestData = async (userId: string): Promise<SeedResult> => {
       .limit(1);
 
     if (existingCards && existingCards.length > 0) {
-      console.log('Test verileri zaten mevcut');
+      logger.info('Test data already exists');
       return { success: true, message: 'Test verileri zaten mevcut' };
     }
 
@@ -176,11 +179,11 @@ export const seedTestData = async (userId: string): Promise<SeedResult> => {
       .select();
 
     if (cardsError) {
-      console.error('Kartlar eklenirken hata:', cardsError);
+      logger.error('Error adding cards', cardsError);
       throw cardsError;
     }
 
-    console.log(`${insertedCards?.length || 0} test kartı eklendi`);
+    logger.info(`${insertedCards?.length || 0} test cards added`);
 
     // Test koleksiyonlarını ekle
     const testCollections: TestCollection[] = [
@@ -213,11 +216,11 @@ export const seedTestData = async (userId: string): Promise<SeedResult> => {
       .select();
 
     if (collectionsError) {
-      console.error('Koleksiyonlar eklenirken hata:', collectionsError);
+      logger.error('Error adding collections', collectionsError);
       throw collectionsError;
     }
 
-    console.log(`${insertedCollections?.length || 0} test koleksiyonu eklendi`);
+    logger.info(`${insertedCollections?.length || 0} test collections added`);
 
     return {
       success: true,
@@ -228,7 +231,7 @@ export const seedTestData = async (userId: string): Promise<SeedResult> => {
       },
     };
   } catch (error) {
-    console.error('Test verileri ekleme hatası:', error);
+    logger.error('Test data insertion error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -243,16 +246,14 @@ export const seedTestData = async (userId: string): Promise<SeedResult> => {
  */
 export const initializeDatabase = async (userId?: string): Promise<ServiceResponse<void>> => {
   try {
-    console.log('Database başlatılıyor...');
+    logger.info('Initializing database...');
 
     // Tabloları kontrol et
     const tablesExist = await checkTablesExist();
 
     if (!tablesExist) {
-      console.warn(
-        '⚠️ UYARI: Tablolar henüz oluşturulmamış!\n' +
-        'Lütfen Supabase SQL Editor\'ünde aşağıdaki dosyayı çalıştırın:\n' +
-        'supabase/migrations/001_initial_schema.sql'
+      logger.warn(
+        'Tables not yet created! Run migrations in order: 001_initial_schema_clean.sql, 002_security_policies.sql, 003_storage_policies.sql, 004_add_avatar_path.sql'
       );
       return {
         success: false,
@@ -260,7 +261,7 @@ export const initializeDatabase = async (userId?: string): Promise<ServiceRespon
       };
     }
 
-    console.log('✅ Tablolar mevcut');
+    logger.info('Tables exist');
 
     // Kullanıcı ID'si varsa ve development modundaysak test verilerini ekle
     if (userId && __DEV__) {
@@ -273,7 +274,7 @@ export const initializeDatabase = async (userId?: string): Promise<ServiceRespon
       message: 'Database hazır',
     };
   } catch (error) {
-    console.error('Database başlatma hatası:', error);
+    logger.error('Database initialization error', error);
     return {
       success: false,
       error: (error as Error).message,

@@ -2,27 +2,46 @@
  * Supabase client initialization and configuration
  */
 import { createClient, SupabaseClient, AuthChangeEvent, Session, User } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
 import Settings from '@config/settings';
+import { Logger } from './logger';
 
-// AsyncStorage adapter type for Supabase
+const logger = new Logger('SupabaseClient');
+
+// SecureStore adapter type for Supabase
 interface StorageAdapter {
   getItem: (key: string) => Promise<string | null>;
   setItem: (key: string, value: string) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
 }
 
-// AsyncStorage adapter for Supabase
-const AsyncStorageAdapter: StorageAdapter = {
+// SecureStore adapter for Supabase - provides encrypted storage for auth tokens
+// This replaces AsyncStorage to prevent token leakage on rooted/jailbroken devices
+const SecureStorageAdapter: StorageAdapter = {
   getItem: async (key: string): Promise<string | null> => {
-    return await AsyncStorage.getItem(key);
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      logger.error('SecureStore getItem error', error);
+      return null;
+    }
   },
   setItem: async (key: string, value: string): Promise<void> => {
-    await AsyncStorage.setItem(key, value);
+    try {
+      await SecureStore.setItemAsync(key, value, {
+        keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      });
+    } catch (error) {
+      logger.error('SecureStore setItem error', error);
+    }
   },
   removeItem: async (key: string): Promise<void> => {
-    await AsyncStorage.removeItem(key);
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      logger.error('SecureStore removeItem error', error);
+    }
   },
 };
 
@@ -32,7 +51,7 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    storage: AsyncStorageAdapter,
+    storage: SecureStorageAdapter,
   },
   global: {
     headers: {
@@ -48,7 +67,7 @@ type AuthListenerCallback = (event: AuthChangeEvent, session: Session | null) =>
 export const setupAuthListener = (callback: AuthListenerCallback) => {
   const { data: authListener } = supabase.auth.onAuthStateChange(
     (event: AuthChangeEvent, session: Session | null) => {
-      console.log('Auth state changed:', event);
+      logger.debug(`Auth state changed: ${event}`);
       callback(event, session);
     }
   );
@@ -63,7 +82,7 @@ export const getSession = async (): Promise<Session | null> => {
     if (error) throw error;
     return session;
   } catch (error) {
-    console.error('Session get error:', error);
+    logger.error('Session get error', error);
     return null;
   }
 };
@@ -75,7 +94,7 @@ export const getUser = async (): Promise<User | null> => {
     if (error) throw error;
     return user;
   } catch (error) {
-    console.error('User get error:', error);
+    logger.error('User get error', error);
     return null;
   }
 };
@@ -93,7 +112,7 @@ export const signOut = async (): Promise<SignOutResponse> => {
     if (error) throw error;
     return { success: true };
   } catch (error) {
-    console.error('Sign out error:', error);
+    logger.error('Sign out error', error);
     return { success: false, error: error as Error };
   }
 };

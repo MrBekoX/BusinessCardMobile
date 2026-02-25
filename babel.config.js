@@ -1,21 +1,24 @@
 module.exports = function(api) {
   api.cache(true);
+  const isTest = process.env.NODE_ENV === 'test' || process.env.BABEL_ENV === 'test';
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'react-native-reanimated/plugin',
-      [
-        'module:react-native-dotenv',
-        {
-          envName: 'APP_ENV',
-          moduleName: '@env',
-          path: '.env',
-          blacklist: null,
-          whitelist: null,
-          safe: false,
-          allowUndefined: true,
-        },
-      ],
+      ...(!isTest
+        ? [[
+            'module:react-native-dotenv',
+            {
+              envName: 'APP_ENV',
+              moduleName: '@env',
+              path: '.env',
+              blacklist: null,
+              whitelist: ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'APP_ENV'],
+              safe: true,
+              allowUndefined: false,
+            },
+          ]]
+        : []),
       [
         'module-resolver',
         {
@@ -36,6 +39,7 @@ module.exports = function(api) {
           },
         },
       ],
+      'react-native-reanimated/plugin',
     ],
   };
 };

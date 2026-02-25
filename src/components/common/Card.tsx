@@ -16,7 +16,7 @@ import {
 import { useTheme } from '@context/ThemeContext';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '@constants/theme';
 import { formatPhone, truncateText, getInitials, generateRandomColor } from '@utils/formatters';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import { Card as CardType } from '@/types';
 
 // ==================== TYPES ====================

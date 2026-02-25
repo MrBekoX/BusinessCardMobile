@@ -6,7 +6,7 @@ import 'react-native-gesture-handler/jestSetup';
 // Mock NativeModules
 jest.mock('react-native/Libraries/Utilities/Platform', () => ({
   OS: 'ios', // or 'android'
-  select: (obj) => obj.ios || obj.default,
+  select: (obj: any) => obj.ios || obj.default,
 }));
 
 // Mock AsyncStorage
@@ -99,8 +99,8 @@ jest.mock('expo-image-picker', () => ({
 
 // Mock SafeAreaContext
 jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaProvider: ({ children }) => children,
-  SafeAreaView: ({ children }) => children,
+  SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
+  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   useSafeAreaFrame: () => ({ x: 0, y: 0, width: 375, height: 667 }),
 }));
@@ -115,7 +115,7 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({
     params: {},
   }),
-  NavigationContainer: ({ children }) => children,
+  NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock Theme Context
@@ -138,7 +138,7 @@ jest.mock('../context/ThemeContext', () => ({
     toggleTheme: jest.fn(),
     setTheme: jest.fn(),
   }),
-  ThemeProvider: ({ children }) => children,
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock Auth Context
@@ -166,7 +166,7 @@ jest.mock('../context/AuthContext', () => ({
     updateProfile: jest.fn(),
     clearError: jest.fn(),
   }),
-  AuthProvider: ({ children }) => children,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Global fetch mock
@@ -177,15 +177,15 @@ const originalError = console.error;
 const originalWarn = console.warn;
 
 beforeAll(() => {
-  console.error = (...args) => {
-    if (/Warning: ReactDOM.render is no longer supported in React 18/.test(args[0])) {
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && /Warning: ReactDOM.render is no longer supported in React 18/.test(args[0])) {
       return;
     }
     originalError.call(console, ...args);
   };
-  
-  console.warn = (...args) => {
-    if (/Warning: An update to .* inside a test was not wrapped in act/.test(args[0])) {
+
+  console.warn = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && /Warning: An update to .* inside a test was not wrapped in act/.test(args[0])) {
       return;
     }
     originalWarn.call(console, ...args);
@@ -200,7 +200,7 @@ afterAll(() => {
 // Performance mock
 if (typeof performance === 'undefined') {
   global.performance = {
-    now: () => Date.now(),
+    now: (): number => Date.now(),
   };
 }
 

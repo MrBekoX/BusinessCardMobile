@@ -22,7 +22,7 @@ import { AppStackParamList } from '@/types/navigation';
 
 // Components
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 import { Card as CardType } from '@/types';
 

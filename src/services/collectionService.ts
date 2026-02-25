@@ -12,6 +12,9 @@ import {
   ServiceResponse,
   CollectionStats,
 } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('CollectionService');
 
 // ==================== TYPES ====================
 
@@ -45,9 +48,8 @@ export const getCollections = async (
     } = options;
 
     if (includeCardCount) {
-      const { data, error } = await supabase.rpc('get_collection_with_count', {
-        user_id_param: userId,
-      });
+      // RPC fonksiyonu artık auth.uid() kullanıyor, parametre gerekmez (SECURITY INVOKER)
+      const { data, error } = await supabase.rpc('get_collection_with_count');
 
       if (error) throw error;
 
@@ -74,7 +76,7 @@ export const getCollections = async (
       data: (data || []) as Collection[],
     };
   } catch (error) {
-    console.error('Get collections error:', error);
+    logger.error('Get collections error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -104,7 +106,7 @@ export const getCollectionById = async (
       data: data as Collection,
     };
   } catch (error) {
-    console.error('Get collection by ID error:', error);
+    logger.error('Get collection by ID error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -141,7 +143,7 @@ export const createCollection = async (
       message: 'Koleksiyon başarıyla oluşturuldu',
     };
   } catch (error) {
-    console.error('Create collection error:', error);
+    logger.error('Create collection error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -174,7 +176,7 @@ export const updateCollection = async (
       message: 'Koleksiyon başarıyla güncellendi',
     };
   } catch (error) {
-    console.error('Update collection error:', error);
+    logger.error('Update collection error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -203,7 +205,7 @@ export const deleteCollection = async (
       message: 'Koleksiyon başarıyla silindi',
     };
   } catch (error) {
-    console.error('Delete collection error:', error);
+    logger.error('Delete collection error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -258,7 +260,7 @@ export const getCardsInCollection = async (
       data: cards,
     };
   } catch (error) {
-    console.error('Get cards in collection error:', error);
+    logger.error('Get cards in collection error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -330,7 +332,7 @@ export const addCardToCollection = async (
       message: 'Kart koleksiyona eklendi',
     };
   } catch (error) {
-    console.error('Add card to collection error:', error);
+    logger.error('Add card to collection error', error);
 
     // Unique constraint hatası
     if ((error as { code?: string }).code === '23505') {
@@ -380,7 +382,7 @@ export const removeCardFromCollection = async (
       message: 'Kart koleksiyondan çıkarıldı',
     };
   } catch (error) {
-    console.error('Remove card from collection error:', error);
+    logger.error('Remove card from collection error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -423,7 +425,7 @@ export const reorderCardsInCollection = async (
       message: 'Kartlar yeniden sıralandı',
     };
   } catch (error) {
-    console.error('Reorder cards error:', error);
+    logger.error('Reorder cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -481,7 +483,7 @@ export const bulkAddCardsToCollection = async (
       message: `${cardIds.length} kart koleksiyona eklendi`,
     };
   } catch (error) {
-    console.error('Bulk add cards error:', error);
+    logger.error('Bulk add cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -522,7 +524,7 @@ export const bulkRemoveCardsFromCollection = async (
       message: `${cardIds.length} kart koleksiyondan çıkarıldı`,
     };
   } catch (error) {
-    console.error('Bulk remove cards error:', error);
+    logger.error('Bulk remove cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -569,7 +571,7 @@ export const getCollectionStats = async (
       },
     };
   } catch (error) {
-    console.error('Get collection stats error:', error);
+    logger.error('Get collection stats error', error);
     return {
       success: false,
       error: (error as Error).message,

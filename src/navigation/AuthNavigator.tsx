@@ -1,10 +1,9 @@
 /**
- * Authentication Navigator.
+ * Authentication Navigator (F-013: NavigationContainer kaldırıldı, root App.js'de)
  * Giriş, kayıt ve şifre sıfırlama ekranlarını yönetir.
  */
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@context/ThemeContext';
 import { COLORS } from '@constants/theme';
@@ -21,23 +20,11 @@ const AuthNavigator: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
 
-  const navigationTheme: Theme = {
-    colors: {
-      primary: colors.primary || COLORS.primary,
-      background: colors.background || COLORS.light.background,
-      card: colors.card || COLORS.light.card,
-      text: colors.text || COLORS.light.text,
-      border: colors.border || COLORS.light.border,
-      notification: colors.error || COLORS.light.error,
-    },
-    dark: theme.isDark,
-  };
-
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <>
       <StatusBar 
         style={theme.isDark ? 'light' : 'dark'} 
-        backgroundColor={colors.background || COLORS.light.background}
+        backgroundColor={colors.background || '#FFFFFF'}
       />
       
       <Stack.Navigator
@@ -85,7 +72,7 @@ const AuthNavigator: React.FC = () => {
           }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    </>
   );
 };
 

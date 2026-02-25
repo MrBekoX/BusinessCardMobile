@@ -19,10 +19,13 @@ import { useTheme } from '@context/ThemeContext';
 import { COLORS, SPACING, TYPOGRAPHY } from '@constants/theme';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { AppStackParamList, AppTabParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('QRScannerScreen');
 
 // Components
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 
@@ -54,9 +57,9 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({ navigation }) => {
     setIsScanning(false);
     
     const { data } = result;
-    console.log('QR Code scanned:', data);
+    logger.info('QR Code scanned', { type: 'qr', length: data?.length || 0 }); // F-005: Ham veri loglanmıyor, sadece metadata
     
-    Alert.alert('QR Kod Tarandı', `Veri: ${data}`, [
+    Alert.alert('QR Kod Tarandı', `Tür: QR Kod\nUzunluk: ${data?.length || 0} karakter`, [
       {
         text: 'Kapat',
         onPress: () => {

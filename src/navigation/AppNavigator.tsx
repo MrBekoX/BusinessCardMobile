@@ -1,16 +1,15 @@
 /**
- * Main App Navigator.
+ * Main App Navigator (F-013: NavigationContainer kaldırıldı, root App.js'de)
  * Uygulama içi ekranları ve alt navigasyonları yönetir.
  */
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@context/ThemeContext';
 import { COLORS } from '@constants/theme';
 import { AppStackParamList, AppTabParamList } from '@/types/navigation';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // Import screens
 import HomeScreen from '@screens/App/HomeScreen';
@@ -126,20 +125,8 @@ const AppNavigator: React.FC = () => {
   const theme = useTheme();
   const colors = theme.colors;
 
-  const navigationTheme: Theme = {
-    colors: {
-      primary: colors.primary || COLORS.primary,
-      background: colors.background || COLORS.light.background,
-      card: colors.card || COLORS.light.card,
-      text: colors.text || COLORS.light.text,
-      border: colors.border || COLORS.light.border,
-      notification: colors.error || COLORS.light.error,
-    },
-    dark: theme.isDark,
-  };
-
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <>
       <StatusBar 
         style={theme.isDark ? 'light' : 'dark'} 
         backgroundColor={colors.background || COLORS.light.background}
@@ -188,7 +175,7 @@ const AppNavigator: React.FC = () => {
           }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    </>
   );
 };
 

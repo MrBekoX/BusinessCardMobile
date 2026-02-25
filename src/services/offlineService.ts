@@ -4,6 +4,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo, { NetInfoState, NetInfoSubscription } from '@react-native-community/netinfo';
 import Settings from '@config/settings';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('OfflineService');
 
 // ==================== TYPES ====================
 
@@ -50,7 +53,7 @@ export const checkNetworkStatus = async (): Promise<boolean> => {
     const state = await NetInfo.fetch();
     return !!(state.isConnected && state.isInternetReachable);
   } catch (error) {
-    console.error('Network status check error:', error);
+    logger.error('Network status check error', error);
     return false;
   }
 };
@@ -88,9 +91,9 @@ export const cacheData = async <T>(
       JSON.stringify(cacheItem)
     );
     
-    console.log(`Data cached: ${key}`);
+    logger.debug(`Data cached: ${key}`);
   } catch (error) {
-    console.error('Cache write error:', error);
+    logger.error('Cache write error', error);
   }
 };
 
@@ -109,14 +112,14 @@ export const getCachedData = async <T>(key: string): Promise<T | null> => {
     // Cache süresi dolmuşsa null dön
     if (age > cacheItem.maxAge) {
       await AsyncStorage.removeItem(`${CACHE_PREFIX}${key}`);
-      console.log(`Cache expired and removed: ${key}`);
+      logger.debug(`Cache expired and removed: ${key}`);
       return null;
     }
     
-    console.log(`Cache hit: ${key}`);
+    logger.debug(`Cache hit: ${key}`);
     return cacheItem.data;
   } catch (error) {
-    console.error('Cache read error:', error);
+    logger.error('Cache read error', error);
     return null;
   }
 };
@@ -139,7 +142,7 @@ export const updateCachedData = async <T>(
     
     return false;
   } catch (error) {
-    console.error('Cache update error:', error);
+    logger.error('Cache update error', error);
     return false;
   }
 };
@@ -150,9 +153,9 @@ export const updateCachedData = async <T>(
 export const removeCachedData = async (key: string): Promise<void> => {
   try {
     await AsyncStorage.removeItem(`${CACHE_PREFIX}${key}`);
-    console.log(`Cache removed: ${key}`);
+    logger.debug(`Cache removed: ${key}`);
   } catch (error) {
-    console.error('Cache remove error:', error);
+    logger.error('Cache remove error', error);
   }
 };
 
@@ -164,9 +167,9 @@ export const clearAllCache = async (): Promise<void> => {
     const keys = await AsyncStorage.getAllKeys();
     const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
     await AsyncStorage.multiRemove(cacheKeys);
-    console.log('All cache cleared');
+    logger.info('All cache cleared');
   } catch (error) {
-    console.error('Clear all cache error:', error);
+    logger.error('Clear all cache error', error);
   }
 };
 
@@ -204,7 +207,7 @@ export const getCacheStats = async (): Promise<CacheStats> => {
       totalSize: `${(totalSize / 1024).toFixed(2)} KB`,
     };
   } catch (error) {
-    console.error('Cache stats error:', error);
+    logger.error('Cache stats error', error);
     return { totalItems: 0, validItems: 0, expiredItems: 0, totalSize: '0 KB' };
   }
 };
@@ -235,9 +238,9 @@ export const addToSyncQueue = async (
     });
     
     await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-    console.log('Operation added to sync queue:', operation.type);
+    logger.debug('Operation added to sync queue', { type: operation.type });
   } catch (error) {
-    console.error('Sync queue add error:', error);
+    logger.error('Sync queue add error', error);
   }
 };
 
@@ -249,7 +252,7 @@ export const getSyncQueue = async (): Promise<SyncOperation[]> => {
     const queue = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
     return queue ? JSON.parse(queue) : [];
   } catch (error) {
-    console.error('Sync queue read error:', error);
+    logger.error('Sync queue read error', error);
     return [];
   }
 };
@@ -260,9 +263,9 @@ export const getSyncQueue = async (): Promise<SyncOperation[]> => {
 export const clearSyncQueue = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem(SYNC_QUEUE_KEY);
-    console.log('Sync queue cleared');
+    logger.info('Sync queue cleared');
   } catch (error) {
-    console.error('Sync queue clear error:', error);
+    logger.error('Sync queue clear error', error);
   }
 };
 
@@ -274,9 +277,9 @@ export const removeFromSyncQueue = async (operationId: string): Promise<void> =>
     const queue = await getSyncQueue();
     const filteredQueue = queue.filter(op => op.id !== operationId);
     await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(filteredQueue));
-    console.log('Operation removed from sync queue:', operationId);
+    logger.debug('Operation removed from sync queue', { operationId });
   } catch (error) {
-    console.error('Sync queue remove error:', error);
+    logger.error('Sync queue remove error', error);
   }
 };
 
@@ -294,10 +297,10 @@ export const updateSyncQueueItem = async (
     if (itemIndex !== -1) {
       queue[itemIndex] = { ...queue[itemIndex], ...updates };
       await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-      console.log('Sync queue item updated:', operationId);
+      logger.debug('Sync queue item updated', { operationId });
     }
   } catch (error) {
-    console.error('Sync queue update error:', error);
+    logger.error('Sync queue update error', error);
   }
 };
 
@@ -307,7 +310,7 @@ export const updateSyncQueueItem = async (
  * Senkronizasyon işlemini gerçekleştir.
  */
 const performSyncOperation = async (operation: SyncOperation): Promise<void> => {
-  console.log('Performing sync operation:', operation.type);
+  logger.debug('Performing sync operation', { type: operation.type });
   
   // Simülasyon için kısa bir gecikme
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -320,27 +323,27 @@ export const syncOfflineOperations = async (): Promise<void> => {
   const isOnline = await checkNetworkStatus();
   
   if (!isOnline) {
-    console.log('Offline durumda, senkronizasyon yapılamıyor');
+    logger.debug('Offline mode, sync not available');
     return;
   }
   
   const queue = await getSyncQueue();
   
   if (queue.length === 0) {
-    console.log('Senkronize edilecek işlem yok');
+    logger.debug('No operations to sync');
     return;
   }
   
-  console.log(`${queue.length} işlem senkronize ediliyor...`);
+  logger.info(`${queue.length} operations to sync`);
   
   // Her bir işlemi senkronize et
   for (const operation of queue) {
     try {
       await performSyncOperation(operation);
       await removeFromSyncQueue(operation.id);
-      console.log('İşlem senkronize edildi:', operation.type);
+      logger.debug('Operation synced', { type: operation.type });
     } catch (error) {
-      console.error('Senkronizasyon hatası:', error);
+      logger.error('Sync error', error);
       
       // Hata durumunda tekrar deneme
       const updatedAttempts = (operation.attempts || 0) + 1;
@@ -348,7 +351,7 @@ export const syncOfflineOperations = async (): Promise<void> => {
       if (updatedAttempts >= operation.maxAttempts) {
         // Maksimum deneme sayısına ulaşıldı, işlemi başarısız olarak işaretle
         await removeFromSyncQueue(operation.id);
-        console.log('İşlem başarısız, kuyruktan kaldırıldı:', operation.type);
+        logger.warn('Operation failed, removed from queue', { type: operation.type });
       } else {
         // Tekrar deneme sayısını artır
         await updateSyncQueueItem(operation.id, { 
@@ -371,7 +374,7 @@ export const getLastSyncTime = async (): Promise<number | null> => {
     const lastSync = await AsyncStorage.getItem(LAST_SYNC_KEY);
     return lastSync ? parseInt(lastSync, 10) : null;
   } catch (error) {
-    console.error('Get last sync time error:', error);
+    logger.error('Get last sync time error', error);
     return null;
   }
 };

@@ -11,6 +11,9 @@ import {
   ServiceResponse,
   CardStats,
 } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('CardService');
 
 // ==================== GET OPERATIONS ====================
 
@@ -61,7 +64,7 @@ export const getCards = async (
       data: (data || []) as Card[],
     };
   } catch (error) {
-    console.error('Get cards error:', error);
+    logger.error('Get cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -91,7 +94,7 @@ export const getCardById = async (
       data: data as Card,
     };
   } catch (error) {
-    console.error('Get card by ID error:', error);
+    logger.error('Get card by ID error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -111,8 +114,8 @@ export const searchCards = async (
       return getCards(userId);
     }
 
+    // RPC fonksiyonu artık auth.uid() kullanıyor, user_id_param gerekmez (SECURITY INVOKER)
     const { data, error } = await supabase.rpc('search_cards', {
-      user_id_param: userId,
       search_query: searchQuery,
     });
 
@@ -123,7 +126,7 @@ export const searchCards = async (
       data: (data || []) as Card[],
     };
   } catch (error) {
-    console.error('Search cards error:', error);
+    logger.error('Search cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -160,7 +163,7 @@ export const createCard = async (
       message: 'Kartvizit başarıyla oluşturuldu',
     };
   } catch (error) {
-    console.error('Create card error:', error);
+    logger.error('Create card error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -193,7 +196,7 @@ export const updateCard = async (
       message: 'Kartvizit başarıyla güncellendi',
     };
   } catch (error) {
-    console.error('Update card error:', error);
+    logger.error('Update card error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -222,7 +225,7 @@ export const deleteCard = async (
       message: 'Kartvizit başarıyla silindi',
     };
   } catch (error) {
-    console.error('Delete card error:', error);
+    logger.error('Delete card error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -257,7 +260,7 @@ export const toggleCardFavorite = async (
       message: isFavorite ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı',
     };
   } catch (error) {
-    console.error('Toggle favorite error:', error);
+    logger.error('Toggle favorite error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -307,7 +310,7 @@ export const addTagToCard = async (
       message: 'Tag eklendi',
     };
   } catch (error) {
-    console.error('Add tag error:', error);
+    logger.error('Add tag error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -355,7 +358,7 @@ export const removeTagFromCard = async (
       message: 'Tag çıkarıldı',
     };
   } catch (error) {
-    console.error('Remove tag error:', error);
+    logger.error('Remove tag error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -386,7 +389,7 @@ export const bulkDeleteCards = async (
       message: `${cardIds.length} kartvizit silindi`,
     };
   } catch (error) {
-    console.error('Bulk delete cards error:', error);
+    logger.error('Bulk delete cards error', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -455,7 +458,7 @@ export const getCardStats = async (
       },
     };
   } catch (error) {
-    console.error('Get card stats error:', error);
+    logger.error('Get card stats error', error);
     return {
       success: false,
       error: (error as Error).message,

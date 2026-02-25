@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@context/ThemeContext';
 import { COLORS, TOUCHABLE_SIZE, TYPOGRAPHY, BORDER_RADIUS } from '@constants/theme';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 

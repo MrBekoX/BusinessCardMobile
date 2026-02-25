@@ -13,6 +13,7 @@ export interface UserMetadata {
   last_name?: string;
   display_name?: string;
   phone?: string;
+  avatar_path?: string;
   avatar_url?: string;
 }
 
@@ -22,6 +23,7 @@ export interface Profile {
   last_name?: string;
   display_name?: string;
   phone?: string;
+  avatar_path?: string;
   avatar_url?: string;
   bio?: string;
   created_at: string;

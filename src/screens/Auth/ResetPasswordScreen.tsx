@@ -20,11 +20,14 @@ import { SPACING, TYPOGRAPHY } from '@constants/theme';
 import { isValidEmail } from '@utils/validators';
 import { ERROR_MESSAGES } from '@config/errorMessages';
 import { AuthStackParamList } from '@/types/navigation';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('ResetPasswordScreen');
 
 // Components
 import CustomInput from '@components/common/CustomInput';
 import MemoizedButton from '@components/common/MemoizedButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 
 // ==================== TYPES ====================
 
@@ -84,7 +87,7 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation })
         Alert.alert('Hata', result.error || ERROR_MESSAGES.UNEXPECTED_ERROR);
       }
     } catch (err) {
-      console.error('Password reset error:', err);
+      logger.error('Password reset error', err);
       Alert.alert('Hata', ERROR_MESSAGES.UNEXPECTED_ERROR);
     }
   };

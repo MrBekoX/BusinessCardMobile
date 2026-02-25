@@ -1,14 +1,17 @@
 /**
  * Authentication Context Provider.
  * Kullanıcı oturum yönetimi ve kimlik doğrulama işlemleri.
+ * NOT: Tüm auth verileri SecureStore üzerinden supabaseClient tarafından yönetilir.
  */
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, getSession, signOut as supabaseSignOut, setupAuthListener } from '@lib/supabaseClient';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@config/errorMessages';
 import { validateUserData } from '@utils/validators';
 import { initializeDatabase } from '@lib/databaseSetup';
 import { User, Session, ServiceResponse, AuthResponse } from '@/types';
+import { Logger } from '@lib/logger';
+
+const logger = new Logger('AuthContext');
 
 // ==================== TYPES ====================
 
@@ -48,9 +51,6 @@ interface AuthError {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = '@cardvault_auth';
-const USER_STORAGE_KEY = '@cardvault_user';
-
 /**
  * Auth Context Provider.
  */
@@ -64,18 +64,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Auth durum değişikliklerini dinle
   useEffect(() => {
     const authListener = setupAuthListener((event, sessionData) => {
-      console.log('Auth event:', event);
+      logger.debug(`Auth event: ${event}`);
       
       if (event === 'SIGNED_IN' && sessionData) {
         handleSignIn(sessionData as Session);
       } else if (event === 'SIGNED_OUT') {
-        handleSignOutInternal();
+        handleSignedOutEvent();
       } else if (event === 'TOKEN_REFRESHED' && sessionData) {
         setSession(sessionData as Session);
         setAuthError(null);
       } else if (event === 'USER_UPDATED' && sessionData) {
         setUser((sessionData as Session).user as User);
-        saveUserData((sessionData as Session).user as User);
+        // SecureStore'da user verisi otomatik yönetiliyor, ayrı kaydetme gerekmez
       }
     });
 
@@ -88,38 +88,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   /**
-   * Başlangıçta auth durumunu yükle
+   * Başlangıçta auth durumunu yükle - Sadece SecureStore üzerinden
    */
   const initializeAuth = async (): Promise<void> => {
     try {
       setLoading(true);
       
-      // Local storage'dan kullanıcı bilgilerini yükle
-      const savedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
-      const savedSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-      
-      if (savedUser && savedSession) {
-        const parsedUser = JSON.parse(savedUser) as User;
-        const parsedSession = JSON.parse(savedSession) as Session;
-        
-        setUser(parsedUser);
-        setSession(parsedSession);
-        setIsAuthenticated(true);
-      }
-      
-      // Supabase'den güncel oturum bilgilerini al
+      // Supabase SecureStore adapter'dan güncel oturum bilgilerini al
       const currentSession = await getSession();
       if (currentSession) {
         setUser(currentSession.user as User);
         setSession(currentSession as Session);
         setIsAuthenticated(true);
-        await saveAuthData(currentSession as Session);
       } else {
-        // Oturum süresi dolmuşsa temizle
-        await clearAuthData();
+        // Oturum yoksa state'i temizle
+        setUser(null);
+        setSession(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Auth initialization error:', error);
+      logger.error('Auth initialization error', error);
       setAuthError(ERROR_MESSAGES.UNEXPECTED_ERROR);
     } finally {
       setLoading(false);
@@ -148,7 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: false, error: ERROR_MESSAGES.UNEXPECTED_ERROR };
     } catch (error) {
-      console.error('Sign in error:', error);
+      logger.error('Sign in error', error);
       const errorMessage = getAuthErrorMessage(error as AuthError);
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
@@ -198,7 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
     } catch (error) {
-      console.error('Sign up error:', error);
+      logger.error('Sign up error', error);
       const errorMessage = getAuthErrorMessage(error as AuthError);
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
@@ -223,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: true, message: SUCCESS_MESSAGES.PASSWORD_RESET_SUCCESS };
     } catch (error) {
-      console.error('Password reset error:', error);
+      logger.error('Password reset error', error);
       const errorMessage = getAuthErrorMessage(error as AuthError);
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
@@ -248,7 +236,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: true, message: SUCCESS_MESSAGES.PASSWORD_CHANGED };
     } catch (error) {
-      console.error('Password update error:', error);
+      logger.error('Password update error', error);
       const errorMessage = getAuthErrorMessage(error as AuthError);
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
@@ -273,13 +261,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.user) {
         setUser(data.user as User);
-        await saveUserData(data.user as User);
+        // User state güncellendi - AsyncStorage kullanımı kaldırıldı (SecureStore zaten var)
         return { success: true, message: SUCCESS_MESSAGES.PROFILE_UPDATED };
       }
 
       return { success: false, error: ERROR_MESSAGES.UNEXPECTED_ERROR };
     } catch (error) {
-      console.error('Profile update error:', error);
+      logger.error('Profile update error', error);
       const errorMessage = getAuthErrorMessage(error as AuthError);
       setAuthError(errorMessage);
       return { success: false, error: errorMessage };
@@ -289,23 +277,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   /**
-   * Çıkış işlemi (public)
+   * Çıkış işlemi (public) - SecureStore temizliği supabaseSignOut tarafından yapılır
    */
   const handleSignOutInternal = async (): Promise<ServiceResponse<void>> => {
     try {
       setLoading(true);
       
       await supabaseSignOut();
-      await clearAuthData();
-      
-      setUser(null);
-      setSession(null);
-      setIsAuthenticated(false);
-      setAuthError(null);
+      // SecureStore temizliği supabase client tarafından otomatik yapılır
+      handleSignedOutEvent();
       
       return { success: true, message: SUCCESS_MESSAGES.LOGOUT_SUCCESS };
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out error', error);
       setAuthError(ERROR_MESSAGES.UNEXPECTED_ERROR);
       return { success: false, error: ERROR_MESSAGES.UNEXPECTED_ERROR };
     } finally {
@@ -314,7 +298,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   /**
-   * Giriş başarılı
+   * SIGNED_OUT event'i veya manuel çıkış sonrası local state'i temizle.
+   * NOT: Bu fonksiyon Supabase'e tekrar signOut çağrısı yapmaz.
+   */
+  const handleSignedOutEvent = (): void => {
+    setUser(null);
+    setSession(null);
+    setIsAuthenticated(false);
+    setAuthError(null);
+  };
+
+  /**
+   * Giriş başarılı - State güncelle, SecureStore zaten supabaseClient tarafından yönetiliyor
    */
   const handleSignIn = async (sessionData: Session): Promise<void> => {
     setSession(sessionData);
@@ -322,53 +317,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(true);
     setAuthError(null);
 
-    await saveAuthData(sessionData);
-
     // Database'i başlat ve test verilerini ekle
     if (sessionData.user) {
       const dbResult = await initializeDatabase(sessionData.user.id);
       if (dbResult.success) {
-        console.log('✅ Database hazır:', dbResult.message);
+        logger.info('Database ready', { message: dbResult.message });
       } else {
-        console.warn('⚠️ Database başlatma uyarısı:', dbResult.error);
+        logger.warn('Database initialization warning', { error: dbResult.error });
       }
-    }
-  };
-
-  /**
-   * Auth verilerini kaydet
-   */
-  const saveAuthData = async (sessionData: Session): Promise<void> => {
-    try {
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
-      if (sessionData.user) {
-        await saveUserData(sessionData.user as User);
-      }
-    } catch (error) {
-      console.error('Save auth data error:', error);
-    }
-  };
-
-  /**
-   * Kullanıcı verilerini kaydet
-   */
-  const saveUserData = async (userData: User): Promise<void> => {
-    try {
-      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-    } catch (error) {
-      console.error('Save user data error:', error);
-    }
-  };
-
-  /**
-   * Auth verilerini temizle
-   */
-  const clearAuthData = async (): Promise<void> => {
-    try {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-      await AsyncStorage.removeItem(USER_STORAGE_KEY);
-    } catch (error) {
-      console.error('Clear auth data error:', error);
     }
   };
 
